@@ -15,12 +15,12 @@ using var nyahururuDifference = nyahururuDifferenceFile.Workbook.Worksheets[0];
 using var oldItemCodes = oldItemCodesFile.Workbook.Worksheets[0];
 using var unClarifiedItemCodes = unClarifiedItemCodesFile.Workbook.Worksheets[0];
 
-List<ItemCode> allItemsCodes = new(), unCleanItemCodes = new();
+List<ItemCode> allItemsCodes = new(), unCleanItemCodes = new(), nyahururuItemCodes = new();
 for (int i = oldItemCodes.Dimension.Start.Row; i < oldItemCodes.Dimension.End.Row; i++)
 {
 	try
 	{
-        if(CustomValidations.IsValidItemCode(oldItemCodes.Cells[i, 1].Value?.ToString() ?? ""))
+        if(CustomValidations.IsValidItemCode(oldItemCodes.Cells[i, 1].Value?.ToString()?.Trim() ?? ""))
 		{
 			allItemsCodes.Add(new()
 			{
@@ -45,7 +45,7 @@ for (int i = allStocksMaliplus.Dimension.Start.Row; i < allStocksMaliplus.Dimens
 	try
 	{
 		var itemCode =
-			allStocksMaliplus.Cells[i, 1].Value?.ToString() ?? "";
+			allStocksMaliplus.Cells[i, 1].Value?.ToString()?.Trim() ?? "";
 
 		decimal qty = 0;
 		try
@@ -70,9 +70,9 @@ for (int i = allStocksMaliplus.Dimension.Start.Row; i < allStocksMaliplus.Dimens
 				{
 					Quantity = qty,
 					Code = allStocksMaliplus.Cells[i, 1].Value?.ToString()?.Trim(),
-					Name = allStocksMaliplus.Cells[i, 2].Value?.ToString(),
-					Distributor = allStocksMaliplus.Cells[i, 3].Value?.ToString(),
-					IsVerified = false
+					Name = allStocksMaliplus.Cells[i, 2].Value?.ToString()?.Trim().Replace("  "," "),
+                    Distributor = allStocksMaliplus.Cells[i, 3].Value?.ToString()?.Trim(),
+                    IsVerified = false
 				});
 			}
 			else
@@ -89,21 +89,24 @@ for (int i = allStocksMaliplus.Dimension.Start.Row; i < allStocksMaliplus.Dimens
 	}
 }
 
-//using var objs = package.Workbook.Worksheets[0];
+// using var objs = package.Workbook.Worksheets[0];
 
 for (int i = unClarifiedItemCodes.Dimension.Start.Row; i < unClarifiedItemCodes.Dimension.End.Row; i++)
 {
 	try
 	{
-		if (CustomValidations.IsValidItemCode(unClarifiedItemCodes.Cells[i, 1].Value?.ToString() ?? ""))
+		if (CustomValidations.IsValidItemCode(unClarifiedItemCodes.Cells[i, 1].Value?.ToString()?.Trim() ?? ""))
 		{
-			unCleanItemCodes.Add(new()
+			ItemCode obj = new()
 			{
 				Code = unClarifiedItemCodes.Cells[i, 1].Value?.ToString()?.Trim(),
-				Name = unClarifiedItemCodes.Cells[i, 2].Value?.ToString(),
-				Distributor = unClarifiedItemCodes.Cells[i, 3].Value?.ToString(),
+				Name = unClarifiedItemCodes.Cells[i, 2].Value?.ToString()?.Trim().Replace("  ", " "),
+				Distributor = unClarifiedItemCodes.Cells[i, 3].Value?.ToString()?.Trim(),
 				IsVerified = false
-			});
+			};
+
+			if (!string.IsNullOrWhiteSpace(obj.Name))
+				unCleanItemCodes.Add(obj);
 		}
 	}
 	catch (Exception ex)
@@ -113,22 +116,35 @@ for (int i = unClarifiedItemCodes.Dimension.Start.Row; i < unClarifiedItemCodes.
 		Console.BackgroundColor = ConsoleColor.Black;
 	}
 }
+
+
+for (int i = nyahururuDifference.Dimension.Start.Row; i < nyahururuDifference.Dimension.End.Row; i++)
+{
+    try
+    {
+        if (CustomValidations.IsValidItemCode(nyahururuDifference.Cells[i, 3].Value?.ToString()?.Trim() ?? ""))
+        {
+			nyahururuItemCodes.Add(new()
+			{
+				Code = nyahururuDifference.Cells[i, 3].Value?.ToString()?.Trim(),
+				Name = nyahururuDifference.Cells[i, 4].Value?.ToString()?.Trim().Replace("  ", " "),
+				Quantity = decimal.TryParse(nyahururuDifference.Cells[i, 5].Value?.ToString()?.Trim(), out decimal mx) ? mx : 0,
+				IsVerified = false
+			});
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.BackgroundColor = ConsoleColor.DarkRed;
+        Console.WriteLine(ex);
+        Console.BackgroundColor = ConsoleColor.Black;
+    }
+}
+
+
 Matcher.CheckCodes(ref allItemsCodes);
 Matcher.CheckCodes(ref unCleanItemCodes);
+Matcher.CheckCodes(ref nyahururuItemCodes);
 
-Console.WriteLine(Matcher.LaveteshinDistanceAlgorithm("WeEd", "weed"));
-
-
-Console.WriteLine(Matcher.LaveteshinDistanceAlgorithm("Wed", "weed"));
-
-Console.WriteLine(Matcher.LaveteshinDistanceAlgorithm("Wedfsdf", "weed"));
-
-Console.WriteLine(Matcher.LaveteshinDistanceAlgorithm("Wasded", "weed"));
-
-Console.WriteLine(Matcher.LaveteshinDistanceAlgorithm("Wsded", "weed"));
-
-Console.WriteLine(Matcher.LaveteshinDistanceAlgorithm("Wsded", "weed"));
-
-Console.WriteLine(Matcher.LaveteshinDistanceAlgorithm("Wded", "weed"));
-
-
+var data = Matcher.MatchItemCode(nyahururuItemCodes, allItemsCodes, unCleanItemCodes).OrderBy(v => v.OriginalCode).ToList();
+new MsExcelReportService().GenerateMatchReport(data, mainFolder, "Nyahururu Branch");

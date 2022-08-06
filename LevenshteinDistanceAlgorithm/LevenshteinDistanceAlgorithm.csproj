@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="EPPlus" Version="6.0.6" />
+  	<PackageReference Include="morelinq" Version="3.3.2" />
   </ItemGroup>
 
 </Project>
