@@ -212,12 +212,12 @@ public class MsExcelReportService
             {
                 List<string> doneCols = new();
                 foreach (var col in grp
-                   .OrderBy(c => c.MeasureUnit)
-                   .ThenBy(x => x.Quantity)
+                   .OrderByDescending(c => c.Quantity)
+                   .ThenBy(x => x.MeasureUnit)
                    .ThenBy(x => x.Name))
                 {
-                    var isDuplicate = doneCols.Contains((col?.Name ?? ""));
-                     doneCols.Add((col?.Name ?? ""));
+                    var isDuplicate = doneCols.Contains((col?.HarmonizedName ?? ""));
+                     doneCols.Add((col?.HarmonizedName ?? ""));
 
                     if (!col?.IsVerified ?? false)
                         sheet.Cells[currentRow, 1, currentRow, 5].Style.Fill.SetBackground(Color.Lavender);

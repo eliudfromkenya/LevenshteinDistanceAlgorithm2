@@ -31,8 +31,23 @@ namespace LevenshteinDistanceAlgorithm
                         col.Name = $"{value[1..^1]} {col.Name?.Replace(value, "")}";
                     }
                 }
-                catch (Exception ex) { Console.WriteLine("Error 2 " + ex.ToString()); }
+                catch (Exception ex) { Console.WriteLine("Error 2A " + ex.ToString()); }
                 col.Name = col.Name?.ToUpper();
+                try
+                {
+                    var pattern = @"\"".*[A-Z]+.*\""";
+                    if (Regex.Match(col.Name ?? "", pattern).Success)
+                    {
+                        var value = Regex.Match(col.Name ?? "", pattern).Value;
+                        col.Name = $"{value[1..^1]} {col.Name?.Replace(value, "")}";
+                    }
+                }
+                catch (Exception ex) { Console.WriteLine("Error 2B " + ex.ToString()); }
+                try
+                {
+                    col.Name = CheckName(col.Name);
+                }
+                catch (Exception ex) { Console.WriteLine("Error 2B " + ex.ToString()); }
                 try
                 {
                     const string pattern = @"([\d]+ *[a-zA-Z]{1,5} *$)|([\d]* *x *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]* *\* *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]+ *[a-zA-Z]{1,5} *x *[\d]* *$)|([\d]+ *[a-zA-Z]{1,5} *\* *[\d]* *$)";
@@ -55,7 +70,10 @@ namespace LevenshteinDistanceAlgorithm
                         {"ML",new []{"MILLITER","MLT"} },
                         {"L", new[]{"LITER", "LT","LTR"} }
                     };
-
+                    //fert, cabb, D/ , S/Loaf, EGG P/BLACK BEAUTY,EGG PLANT B/B , EGG PLANT BEAUTY,L/MASH,L/STOCK,M/SALVE,M SALVE,H/PROS,H/PHOS,H/PHO, L/STOCK,D/LICK,S/LICK,HI PHOS,R/CREOLE,S/D LICK,M/MAKER,S  D/LICK,S/D LICK,S/LICK,D/MEAL,SUGARLOAF,D/LICK, D.LICK, D/LICK,M/MAKER,M. MAKER,TOMATOE,HIGHPHOS,H/PHOSPOROUS,HI-PHOS,S/BABY,H/PHOSPHOROUS,
+                    //start with "
+                    //replace name double space
+                    // LTD. from distributor before matching
                     foreach (var item in replaces)
                     {
                         var objs = item.Value.SelectMany(n => new[] { n, $"{n}S" }).ToList();
@@ -87,6 +105,56 @@ namespace LevenshteinDistanceAlgorithm
                 }
                 catch (Exception ex) { Console.WriteLine("Error 5 " + ex.ToString()); }
             });
+        }
+
+        private static string? CheckName(string? name)
+        {
+            //D/LICK,S/LICK,R/CREOLE,S/D LICK,M/MAKER,S  D/LICK,S/D LICK,S/LICK,D/MEAL,SUGARLOAF,D/LICK, D.LICK, D/LICK,M/MAKER,M. MAKER,TOMATOE, S/BABY,H/PHOSPHOROUS
+            //start with "
+            //replace name double space
+            // LTD. from distributor before matching
+            if (name.Contains("CABB.") && !name.Contains("CABBAGE"))
+                name = name.Replace("CABB.", "CABBAGE");
+            if (name.Contains("CABB") && !name.Contains("CABBAGE"))
+                name = name.Replace("CABB", "CABBAGE");
+            if (name.Contains("FERT.") && !name.Contains("FERTILIZER"))
+                name = name.Replace("FERT.", "FERTILIZER");
+            if (name.Contains("FERT") && !name.Contains("FERTILIZER"))
+                name = name.Replace("FERT", "FERTILIZER");
+            if (name.Contains("D/") && !name.Contains("DAIRY "))
+                name = name.Replace("D/", "DAIRY ");
+            if (name.Contains("S/LOAF") && !name.Contains("SUGAR LOAF"))
+                name = name.Replace("S/LOAF", "SUGAR LOAF");
+            if (name.Contains("SUGARLOAF") && !name.Contains("SUGAR LOAF"))
+                name = name.Replace("SUGARLOAF", "SUGAR LOAF");
+            if (name.Contains("EGG P/BLACK BEAUTY"))
+                name = name.Replace("EGG P/BLACK BEAUTY", "EGG PLANT BLACK BEAUTY");
+            if (name.Contains("EGG PLANT B/B"))
+                name = name.Replace("EGG PLANT B/B", "EGG PLANT BLACK BEAUTY");
+            if (name.Contains("EGG PLANT BEAUTY"))
+                name = name.Replace("EGG PLANT BEAUTY", "EGG PLANT BLACK BEAUTY");
+            if (name.Contains("L/MASH") && !name.Contains("LAYERS MASH"))
+                name = name.Replace("L/MASH", "LAYERS MASH");
+            if (name.Contains("L/STOCK") && !name.Contains("LIVESTOCK"))
+                name = name.Replace("L/STOCK", "LIVESTOCK");
+            if (name.Contains("L/STOCK") && !name.Contains("LIVESTOCK"))
+                name = name.Replace("L/STOCK", "LIVESTOCK");
+            if (name.Contains("M/SALVE") && !name.Contains("MILKING SALVE"))
+                name = name.Replace("M/SALVE", "MILKING SALVE");
+            if (name.Contains("M SALVE") && !name.Contains("MILKING SALVE"))
+                name = name.Replace("M SALVE", "MILKING SALVE");
+            if (name.Contains("H/PROS") && !name.Contains("HIGH PHOSPHORUS"))
+                name = name.Replace("H/PROS", "HIGH PHOSPHORUS");
+            if (name.Contains("H/PHO") && !name.Contains("HIGH PHOSPHORUS"))
+                name = name.Replace("H/PHO", "HIGH PHOSPHORUS");
+            if (name.Contains("HI PHOS") && !name.Contains("HIGH PHOSPHORUS"))
+                name = name.Replace("HI PHOS", "HIGH PHOSPHORUS");
+            if (name.Contains("HIGHPHOS") && !name.Contains("HIGH PHOSPHORUS"))
+                name = name.Replace("HIGHPHOS", "HIGH PHOSPHORUS");
+            if (name.Contains("H/PHOSPOROUS") && !name.Contains("HIGH PHOSPHORUS"))
+                name = name.Replace("H/PHOSPOROUS", "HIGH PHOSPHORUS");
+            if (name.Contains("HI-PHOS") && !name.Contains("HIGH PHOSPHORUS"))
+                name = name.Replace("HI-PHOS", "HIGH PHOSPHORUS");
         }
 
         public static short LaveteshinDistanceAlgorithm(ItemCode code, ItemCode code2)
