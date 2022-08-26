@@ -8,4 +8,5 @@ public class ItemCode
     public string? GroupName { get; set; }
     public string? Distributor { get; set; }
     public bool? IsVerified { get; set; }
+    public decimal? Quantity { get; set; }
 }
