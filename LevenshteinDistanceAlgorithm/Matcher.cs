@@ -64,9 +64,9 @@ namespace LevenshteinDistanceAlgorithm
                         {
                             var value = Regex.Match(col.MeasureUnit ?? "", pattern).Value;
                             var replacer = objs.FirstOrDefault(m => m == value.ToUpper());
-                            if (!string.IsNullOrWhiteSpace(replacer))
+                            if (!string.IsNullOrWhiteSpace(replacer) && !(value == item.Key))
                                 col.MeasureUnit = col.MeasureUnit?.Replace(value, item.Key);
-                            if ($"{item.Key}S" == value.ToUpper())
+                            if ($"{item.Key}S" == value.ToUpper() && !(value == item.Key))
                                 col.MeasureUnit = col.MeasureUnit?.Replace(value, item.Key);
                         }
                     }
@@ -89,7 +89,17 @@ namespace LevenshteinDistanceAlgorithm
             });
         }
 
-        public static int LaveteshinDistanceAlgorithm(string s, string t)
+        public static short LaveteshinDistanceAlgorithm(ItemCode code, ItemCode code2)
+        {
+            short level = LaveteshinDistanceAlgorithmBody(code.HarmonizedName ?? "", code2.HarmonizedName ?? "");
+            if (string.IsNullOrWhiteSpace(code.MeasureUnit)
+                || string.IsNullOrWhiteSpace(code.MeasureUnit))
+                level += 2;
+            else if (code.MeasureUnit != code2.MeasureUnit)
+                level += 5;
+            return level;
+        }
+        public static short LaveteshinDistanceAlgorithmBody(string s, string t)
         {
             s = s.ToUpper();
             t = t.ToUpper();
@@ -97,9 +107,9 @@ namespace LevenshteinDistanceAlgorithm
             int n = s.Length, m = t.Length;
             int[,] d = new int[n + 1, m + 1];
             if (n == 0)
-                return m;
+                return (short)m;
             if (m == 0)
-                return n;
+                return (short)n;
 
             for (int i = 0; i <= n; d[i, 0] = i++) ;
             for (int j = 0; j <= m; d[0, j] = j++) ;
@@ -111,7 +121,7 @@ namespace LevenshteinDistanceAlgorithm
                     d[i, j] = Math.Min(Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + cost);
                 }
             }
-            return d[n, m] + 1;
+            return (short)(d[n, m] + 1);
         }
 
         internal static List<ItemCodeMatch> MatchItemCode(List<ItemCode> nyahururuItemCodes, List<ItemCode> allItemsCodes, List<ItemCode> unCleanItemCodes)
@@ -125,7 +135,8 @@ namespace LevenshteinDistanceAlgorithm
                 };
                 itemCodeMatches.Add(match);
 
-                var obj= allItemsCodes.FirstOrDefault(m => m.HarmonizedName== tt.HarmonizedName);
+                var obj = allItemsCodes.FirstOrDefault(m => m.HarmonizedName == tt.HarmonizedName);
+
                 if(obj !=null)
                 {
                     match.MatchedCode=obj;
@@ -133,14 +144,14 @@ namespace LevenshteinDistanceAlgorithm
                     return;
                 }
 
-                obj = allItemsCodes.MinBy(v => LaveteshinDistanceAlgorithm(v.HarmonizedName ?? "", tt.HarmonizedName ?? ""));
+                obj = allItemsCodes.MinBy(v => LaveteshinDistanceAlgorithm(v, tt));
                 match.MatchedCode = obj;
-                match.MatchStrength = (short)LaveteshinDistanceAlgorithm(obj?.HarmonizedName ?? "", tt.HarmonizedName ?? "");
+                match.MatchStrength = (short)LaveteshinDistanceAlgorithm(obj, tt);
                 if (match.MatchStrength < 4)
                     return;
 
-                var obj2 = unCleanItemCodes.MinBy(v => LaveteshinDistanceAlgorithm(v.HarmonizedName ?? "", tt.HarmonizedName ?? ""));
-                var strength = (short)LaveteshinDistanceAlgorithm(obj2?.HarmonizedName ?? "", tt.HarmonizedName ?? "");
+                var obj2 = unCleanItemCodes.MinBy(v => LaveteshinDistanceAlgorithm(v, tt));
+                var strength = (short)LaveteshinDistanceAlgorithm(obj2, tt);
                 if(match.MatchStrength < strength + 2)
                 {
                     match.MatchedCode = obj2;

@@ -50,13 +50,13 @@ for (int i = allStocksMaliplus.Dimension.Start.Row; i < allStocksMaliplus.Dimens
 		decimal qty = 0;
 		try
 		{
-			if (decimal.TryParse(allStocksMaliplus.Cells[i, 3].Value?.ToString() ?? "", out decimal num))
+			if (decimal.TryParse(allStocksMaliplus.Cells[i, 4].Value?.ToString() ?? "", out decimal num))
 				qty = num;
 		}
 		catch { }
 		try
 		{
-			if (qty == 0 && decimal.TryParse(allStocksMaliplus.Cells[i, 4].Value?.ToString() ?? "", out decimal num))
+			if (qty == 0 && decimal.TryParse(allStocksMaliplus.Cells[i, 3].Value?.ToString() ?? "", out decimal num))
 				qty = num;
 		}
 		catch { }
@@ -141,10 +141,38 @@ for (int i = nyahururuDifference.Dimension.Start.Row; i < nyahururuDifference.Di
     }
 }
 
+try
+{
 
-Matcher.CheckCodes(ref allItemsCodes);
-Matcher.CheckCodes(ref unCleanItemCodes);
-Matcher.CheckCodes(ref nyahururuItemCodes);
+	Matcher.CheckCodes(ref allItemsCodes);
+	Matcher.CheckCodes(ref unCleanItemCodes);
+	Matcher.CheckCodes(ref nyahururuItemCodes);
 
-var data = Matcher.MatchItemCode(nyahururuItemCodes, allItemsCodes, unCleanItemCodes).OrderBy(v => v.OriginalCode).ToList();
-new MsExcelReportService().GenerateMatchReport(data, mainFolder, "Nyahururu Branch");
+	var data = Matcher.MatchItemCode(nyahururuItemCodes, allItemsCodes, unCleanItemCodes).OrderBy(v => v.OriginalCode?.Code).ToList();
+
+
+	using var excelPackage = new ExcelPackage();
+	excelPackage.Workbook.Properties.Author = "KFA / Primesoft Implimentation Team";
+	excelPackage.Workbook.Properties.Title = "Zanas to Maliplus Item Master Matching Report";
+	excelPackage.Workbook.Properties.Subject = "Automated Data Matching";
+	excelPackage.Workbook.Properties.Created = DateTime.Now;
+	excelPackage.Workbook.Properties.Company = "KFA LTD";
+
+	var branch = "Nyahururu Branch";
+	var title = $"{branch} Item Codes Match Information";
+
+	var service = new MsExcelReportService();
+	service.GenerateMatchReport(excelPackage, data, mainFolder, branch);
+	service.GenerateGroupsCodeReport(excelPackage, allItemsCodes, mainFolder, branch);
+    service.GenerateDulplicatedItemCodesReport(excelPackage, allItemsCodes, mainFolder, branch);
+    service.GenerateDulplicatedItemCodesOnlyReport(excelPackage, allItemsCodes, mainFolder, branch);
+
+	Console.WriteLine("Done");
+
+}
+catch (Exception ex)
+{
+	Console.BackgroundColor = ConsoleColor.DarkRed;
+	Console.WriteLine(ex);
+	Console.BackgroundColor = ConsoleColor.Black;
+}
