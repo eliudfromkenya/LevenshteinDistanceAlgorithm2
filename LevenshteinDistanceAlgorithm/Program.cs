@@ -15,7 +15,7 @@ using var nyahururuDifference = nyahururuDifferenceFile.Workbook.Worksheets[0];
 using var oldItemCodes = oldItemCodesFile.Workbook.Worksheets[0];
 using var unClarifiedItemCodes = unClarifiedItemCodesFile.Workbook.Worksheets[0];
 
-List<ItemCode> allItemsCodes = new(), unCleanItemCodes = new(), nyahururuItemCodes = new();
+List<ItemCode> allItemsCodes = new(), /*unCleanItemCodes = new(), */nyahururuItemCodes = new();
 for (int i = oldItemCodes.Dimension.Start.Row; i < oldItemCodes.Dimension.End.Row; i++)
 {
 	try
@@ -72,7 +72,7 @@ for (int i = allStocksMaliplus.Dimension.Start.Row; i < allStocksMaliplus.Dimens
 					Code = allStocksMaliplus.Cells[i, 1].Value?.ToString()?.Trim(),
 					Name = allStocksMaliplus.Cells[i, 2].Value?.ToString()?.Trim().Replace("  "," "),
                     Distributor = allStocksMaliplus.Cells[i, 3].Value?.ToString()?.Trim(),
-                    IsVerified = false
+                    IsVerified = true
 				});
 			}
 			else
@@ -95,18 +95,24 @@ for (int i = unClarifiedItemCodes.Dimension.Start.Row; i < unClarifiedItemCodes.
 {
 	try
 	{
-		if (CustomValidations.IsValidItemCode(unClarifiedItemCodes.Cells[i, 1].Value?.ToString()?.Trim() ?? ""))
-		{
-			ItemCode obj = new()
-			{
-				Code = unClarifiedItemCodes.Cells[i, 1].Value?.ToString()?.Trim(),
-				Name = unClarifiedItemCodes.Cells[i, 2].Value?.ToString()?.Trim().Replace("  ", " "),
-				Distributor = unClarifiedItemCodes.Cells[i, 3].Value?.ToString()?.Trim(),
-				IsVerified = false
-			};
+		var itemCode = unClarifiedItemCodes.Cells[i, 1].Value?.ToString()?.Trim() ?? "";
 
-			if (!string.IsNullOrWhiteSpace(obj.Name))
-				unCleanItemCodes.Add(obj);
+		if (CustomValidations.IsValidItemCode(itemCode))
+		{
+			var item = allItemsCodes.FirstOrDefault(x => x.Code == itemCode);
+			if (item == null)
+			{
+				ItemCode obj = new()
+				{
+					Quantity = 0,
+					Code = unClarifiedItemCodes.Cells[i, 1].Value?.ToString()?.Trim(),
+					Name = unClarifiedItemCodes.Cells[i, 2].Value?.ToString()?.Trim().Replace("  ", " "),
+					Distributor = unClarifiedItemCodes.Cells[i, 3].Value?.ToString()?.Trim(),
+					IsVerified = false
+				};
+				if (!string.IsNullOrWhiteSpace(obj.Name))
+					allItemsCodes.Add(obj);
+			}
 		}
 	}
 	catch (Exception ex)
@@ -145,10 +151,10 @@ try
 {
 
 	Matcher.CheckCodes(ref allItemsCodes);
-	Matcher.CheckCodes(ref unCleanItemCodes);
+	//Matcher.CheckCodes(ref unCleanItemCodes);
 	Matcher.CheckCodes(ref nyahururuItemCodes);
 
-	var data = Matcher.MatchItemCode(nyahururuItemCodes, allItemsCodes, unCleanItemCodes).OrderBy(v => v.OriginalCode?.Code).ToList();
+	var data = Matcher.MatchItemCode(nyahururuItemCodes, allItemsCodes).OrderBy(v => v.OriginalCode?.Code).ToList();
 
 
 	using var excelPackage = new ExcelPackage();

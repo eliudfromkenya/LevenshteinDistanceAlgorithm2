@@ -17,7 +17,8 @@ namespace LevenshteinDistanceAlgorithm
             {
                 try
                 {
-                    if (!string.IsNullOrWhiteSpace(col.Distributor))
+                    if (!string.IsNullOrWhiteSpace(col.Distributor)
+                    && !int.TryParse(col.Distributor??"",out int _))
                         col.Name = $"{col.Distributor} {col.Name}";
                 }
                 catch (Exception ex) { Console.WriteLine("Error 1 " + ex.ToString()); }
@@ -104,15 +105,37 @@ namespace LevenshteinDistanceAlgorithm
                    .Distinct().OrderBy(c => c)).Replace(" ", "");
                 }
                 catch (Exception ex) { Console.WriteLine("Error 5 " + ex.ToString()); }
+
+                try
+                {
+                    col.HarmonizedGroupName = CheckHarmonizedName(col.HarmonizedGroupName);
+                    col.HarmonizedName = CheckHarmonizedName(col.HarmonizedName);
+                } catch (Exception ex) { Console.WriteLine("Error 5 " + ex.ToString()); }
             });
         }
 
-        private static string? CheckName(string? name)
+        private static string? CheckHarmonizedName(string? name)
         {
-            //D/LICK,S/LICK,R/CREOLE,S/D LICK,M/MAKER,S  D/LICK,S/D LICK,S/LICK,D/MEAL,SUGARLOAF,D/LICK, D.LICK, D/LICK,M/MAKER,M. MAKER,TOMATOE, S/BABY,H/PHOSPHOROUS
-            //start with "
-            //replace name double space
-            // LTD. from distributor before matching
+            if (string.IsNullOrWhiteSpace(name))
+                return name;
+
+            if (name.Contains("S/LICK") && !name.Contains("SUPER LICK"))
+                name = name.Replace("S/LICK", "SUPER LICK");
+            if (name.Contains("S/D LICK") && !name.Contains("SUPER DAIRY LICK"))
+                name = name.Replace("S/D LICK", "SUPER DAIRY LICK");
+            if (name.Contains("S  D/LICK") && !name.Contains("SUPER DAIRY LICK"))
+                name = name.Replace("S  D/LICK", "SUPER DAIRY LICK");
+            if (name.Contains("S/D LICK") && !name.Contains("SUPER DAIRY LICK"))
+                name = name.Replace("S/D LICK", "SUPER DAIRY LICK");
+
+            return name.Replace("  ", " ").Replace("LTD.","").Replace("LTD","");
+        }
+           private static string? CheckName(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return name;
+
+            name = name.Replace("PHOSPHORUS", "PHOSPHOROUS");
             if (name.Contains("CABB.") && !name.Contains("CABBAGE"))
                 name = name.Replace("CABB.", "CABBAGE");
             if (name.Contains("CABB") && !name.Contains("CABBAGE"))
@@ -123,6 +146,12 @@ namespace LevenshteinDistanceAlgorithm
                 name = name.Replace("FERT", "FERTILIZER");
             if (name.Contains("D/") && !name.Contains("DAIRY "))
                 name = name.Replace("D/", "DAIRY ");
+            if (name.Contains("D /") && !name.Contains("DAIRY "))
+                name = name.Replace("D /", "DAIRY ");
+            if (name.Contains("H/YIELD") && !name.Contains("HIGH YIELD"))
+                name = name.Replace("H/YIELD", "HIGH YIELD");
+            if (name.Contains("H/Y") && !name.Contains("HIGH YIELD"))
+                name = name.Replace("H/Y", "HIGH YIELD");
             if (name.Contains("S/LOAF") && !name.Contains("SUGAR LOAF"))
                 name = name.Replace("S/LOAF", "SUGAR LOAF");
             if (name.Contains("SUGARLOAF") && !name.Contains("SUGAR LOAF"))
@@ -143,18 +172,53 @@ namespace LevenshteinDistanceAlgorithm
                 name = name.Replace("M/SALVE", "MILKING SALVE");
             if (name.Contains("M SALVE") && !name.Contains("MILKING SALVE"))
                 name = name.Replace("M SALVE", "MILKING SALVE");
-            if (name.Contains("H/PROS") && !name.Contains("HIGH PHOSPHORUS"))
-                name = name.Replace("H/PROS", "HIGH PHOSPHORUS");
-            if (name.Contains("H/PHO") && !name.Contains("HIGH PHOSPHORUS"))
-                name = name.Replace("H/PHO", "HIGH PHOSPHORUS");
-            if (name.Contains("HI PHOS") && !name.Contains("HIGH PHOSPHORUS"))
-                name = name.Replace("HI PHOS", "HIGH PHOSPHORUS");
-            if (name.Contains("HIGHPHOS") && !name.Contains("HIGH PHOSPHORUS"))
-                name = name.Replace("HIGHPHOS", "HIGH PHOSPHORUS");
-            if (name.Contains("H/PHOSPOROUS") && !name.Contains("HIGH PHOSPHORUS"))
-                name = name.Replace("H/PHOSPOROUS", "HIGH PHOSPHORUS");
-            if (name.Contains("HI-PHOS") && !name.Contains("HIGH PHOSPHORUS"))
-                name = name.Replace("HI-PHOS", "HIGH PHOSPHORUS");
+            if (name.Contains("H/PROS") && !name.Contains("HIGH PHOSPHOROUS"))
+                name = name.Replace("H/PROS", "HIGH PHOSPHOROUS");
+            if (name.Contains("H/PHO") && !name.Contains("HIGH PHOSPHOROUS"))
+                name = name.Replace("H/PHO", "HIGH PHOSPHOROUS");
+            if (name.Contains("HI PHOS") && !name.Contains("HIGH PHOSPHOROUS"))
+                name = name.Replace("HI PHOS", "HIGH PHOSPHOROUS");
+            if (name.Contains("HIGHPHOS") && !name.Contains("HIGH PHOSPHOROUS"))
+                name = name.Replace("HIGHPHOS", "HIGH PHOSPHOROUS");
+            if (name.Contains(" PHOSP") && !name.Contains(" PHOSPH"))
+                name = name.Replace(" PHOSP", " PHOSPHOROUS");
+            if (name.Contains("H/PHOSPOROUS") && !name.Contains("HIGH PHOSPHOROUS"))
+                name = name.Replace("H/PHOSPOROUS", "HIGH PHOSPHOROUS");
+            if (name.Contains("HI-PHOS") && !name.Contains("HIGH PHOSPHOROUS"))
+                name = name.Replace("HI-PHOS", "HIGH PHOSPHOROUS");
+            if (name.Contains("R/CREOLE") && !name.Contains("RED CREOLE"))
+                name = name.Replace("R/CREOLE", "RED CREOLE");
+            if (name.Contains("M/MAKER") && !name.Contains("MONEY MAKER"))
+                name = name.Replace("M/MAKER", "MONEY MAKER");
+            if (name.Contains("M. MAKER") && !name.Contains("MONEY MAKER"))
+                name = name.Replace("M. MAKER", "MONEY MAKER");
+            if (name.Contains("S/BABY") && !name.Contains("SUGAR BABY"))
+                name = name.Replace("S/BABY", "SUGAR BABY");
+            if (name.Contains("TOMATOE") && !name.Contains("TOMATO"))
+                name = name.Replace("TOMATOE", "TOMATO");
+            if (name.Contains("H/PHOSPHOROUS") && !name.Contains("HIGH PHOSPHOROUS"))
+                name = name.Replace("H/PHOSPHOROUS", "HIGH PHOSPHOROUS");
+            if (name.Contains("DUODIP") && !name.Contains("DUO DIP"))
+                name = name.Replace("DUODIP", "DUO DIP");
+            if (name.Contains("AGROLEAF") && !name.Contains("AGRO LEAF"))
+                name = name.Replace("AGROLEAF", "AGRO LEAF");
+            if (name.Contains("STOCK L.") && !name.Contains("STOCK LICK"))
+                name = name.Replace("STOCK L.", "STOCK LICK");
+            if (name.Contains("S. L.") && !name.Contains("STOCK LICK"))
+                name = name.Replace("S. L.", "STOCK LICK");
+            if (name.Contains("STOCKLICK") && !name.Contains("STOCK LICK"))
+                name = name.Replace("STOCKLICK", "STOCK LICK");
+
+
+            if (name.Contains("DUODIP") && !name.Contains("DUO DIP"))
+                name = name.Replace("DUODIP", "DUO DIP");
+            if (name.Contains("DUODIP") && !name.Contains("DUO DIP"))
+                name = name.Replace("DUODIP", "DUO DIP");
+
+
+            if (name.Contains("D.LICK") && !name.Contains("DAIRY LICK"))
+                name = name.Replace("D.LICK", "DAIRY LICK");
+            return name.Replace("  ", " ").Replace("LTD.","").Replace("LTD","");
         }
 
         public static short LaveteshinDistanceAlgorithm(ItemCode code, ItemCode code2)
@@ -192,7 +256,7 @@ namespace LevenshteinDistanceAlgorithm
             return (short)(d[n, m] + 1);
         }
 
-        internal static List<ItemCodeMatch> MatchItemCode(List<ItemCode> nyahururuItemCodes, List<ItemCode> allItemsCodes, List<ItemCode> unCleanItemCodes)
+        internal static List<ItemCodeMatch> MatchItemCode(List<ItemCode> nyahururuItemCodes, List<ItemCode> allItemsCodes)
         {
             List<ItemCodeMatch> itemCodeMatches = new();
             nyahururuItemCodes.ForEach(tt =>
@@ -215,16 +279,8 @@ namespace LevenshteinDistanceAlgorithm
                 obj = allItemsCodes.MinBy(v => LaveteshinDistanceAlgorithm(v, tt));
                 match.MatchedCode = obj;
                 match.MatchStrength = (short)LaveteshinDistanceAlgorithm(obj, tt);
-                if (match.MatchStrength < 4)
-                    return;
-
-                var obj2 = unCleanItemCodes.MinBy(v => LaveteshinDistanceAlgorithm(v, tt));
-                var strength = (short)LaveteshinDistanceAlgorithm(obj2, tt);
-                if(match.MatchStrength < strength + 2)
-                {
-                    match.MatchedCode = obj2;
-                    match.MatchStrength = strength;
-                }
+                if (obj.MeasureUnit != tt.MeasureUnit)
+                    match.MatchStrength += 3;
             });
             return itemCodeMatches;
         }
