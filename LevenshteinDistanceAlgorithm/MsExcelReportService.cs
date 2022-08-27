@@ -211,6 +211,29 @@ public class MsExcelReportService
             .ToList().ForEach(grp =>
             {
                 List<string> doneCols = new();
+
+                //Add a group box and four option boxes to select room type
+                var grpBox = sheet.Drawings.AddGroupBoxControl("GroupBox 1");
+                grpBox.Text = "Room types";
+                grpBox.SetPosition(currentRow, 6, 1, 1);
+                grpBox.SetSize(150, 80);
+
+                var r1 = sheet.Drawings.AddRadioButtonControl("OptionSingleRoom");
+                r1.Text = "Single Room";
+                r1.FirstButton = true;
+                r1.LinkedCell = sheet.Cells["C7"];
+                r1.SetPosition(5, 15, 1, 5);
+
+                var r2 = sheet.Drawings.AddRadioButtonControl("OptionDoubleRoom");
+                r2.Text = "Double Room";
+                r2.LinkedCell = sheet.Cells["C7"];
+                r2.SetPosition(6, 15, 1, 5);
+                r2.Checked = true;
+                //This will group the groupbox and the radio buttons together as one unit.
+                var gsrp = grpBox.Group(r1, r2);
+
+
+
                 foreach (var col in grp
                    .OrderByDescending(c => c.Quantity)
                    .ThenBy(x => x.MeasureUnit)

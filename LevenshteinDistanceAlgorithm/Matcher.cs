@@ -51,7 +51,7 @@ namespace LevenshteinDistanceAlgorithm
                 catch (Exception ex) { Console.WriteLine("Error 2B " + ex.ToString()); }
                 try
                 {
-                    const string pattern = @"([\d]+ *[a-zA-Z]{1,5} *$)|([\d]* *x *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]* *\* *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]+ *[a-zA-Z]{1,5} *x *[\d]* *$)|([\d]+ *[a-zA-Z]{1,5} *\* *[\d]* *$)";
+                    const string pattern = @"([\d]+\.?[\d]* *[a-zA-Z]{1,5} *$)|([\d]* *x *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]* *\* *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]+ *[a-zA-Z]{1,5} *x *[\d]* *$)|([\d]+ *[a-zA-Z]{1,5} *\* *[\d]* *$)";
 
                     if (Regex.Match(col.Name ?? "", pattern).Success)
                         col.MeasureUnit = Regex.Match(col.Name ?? "", pattern).Value?.Replace("  "," ")?.Trim();
