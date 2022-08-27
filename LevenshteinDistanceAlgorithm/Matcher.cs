@@ -208,11 +208,10 @@ namespace LevenshteinDistanceAlgorithm
                 name = name.Replace("S. L.", "STOCK LICK");
             if (name.Contains("STOCKLICK") && !name.Contains("STOCK LICK"))
                 name = name.Replace("STOCKLICK", "STOCK LICK");
+            if (name.Contains("DARKRED") && !name.Contains("DARK RED"))
+                name = name.Replace("DARKRED", "DARK RED");
 
-
-            if (name.Contains("DUODIP") && !name.Contains("DUO DIP"))
-                name = name.Replace("DUODIP", "DUO DIP");
-            if (name.Contains("DUODIP") && !name.Contains("DUO DIP"))
+            if (name.Contains("DUODIP") && !name.Contains("DARKRED"))
                 name = name.Replace("DUODIP", "DUO DIP");
 
 
