@@ -217,6 +217,8 @@ namespace LevenshteinDistanceAlgorithm
 
             if (name.Contains("D.LICK") && !name.Contains("DAIRY LICK"))
                 name = name.Replace("D.LICK", "DAIRY LICK");
+
+            name = name.Replace("PHOSPHOROUSS", "PHOSPHOROUS");
             return name.Replace("  ", " ").Replace("LTD.","").Replace("LTD","");
         }
 
