@@ -1,4 +1,5 @@
 ﻿using LevenshteinDistanceAlgorithm;
+using OfficeOpenXml;
 using System.Text;
 
 internal class ItemChecker
@@ -106,5 +107,144 @@ internal class ItemChecker
                 Console.BackgroundColor = ConsoleColor.Black;
             }
         } while (true);
+    }
+
+    internal static void UpdateItemByName(List<ItemCode> allItemsCodes, List<ItemCode> nyahururuItems, List<string> nyahururuItemCodes, string mainFolder)
+    {
+        int currentIndex = 0;
+        using var excelPackage = new ExcelPackage();
+        var path = Path.Combine(mainFolder, "BranchReplacements.xlsx");
+        using var sheet = excelPackage.Workbook.Worksheets.Add("Branch Code Replacements");
+        var matches = Matcher.MatchItemCode(nyahururuItems, allItemsCodes);
+        do
+        {
+            try
+            {
+                var code = nyahururuItemCodes[currentIndex];
+                var xCode = matches.FirstOrDefault(x => x.OriginalCode?.Code == code?.Trim());
+
+                if (xCode == null)
+                {
+                    currentIndex++;
+                    continue;
+                }
+
+                if (xCode.MatchStrength == 0)
+                {
+                    try
+                    {
+                        sheet.Cells[currentIndex + 1, 1].Value = xCode?.OriginalCode?.Code;
+                        sheet.Cells[currentIndex + 1, 2].Value = xCode?.OriginalCode?.Name;
+                        sheet.Cells[currentIndex + 1, 3].Value = xCode?.MatchedCode?.Code;
+                        sheet.Cells[currentIndex + 1, 4].Value = xCode?.MatchedCode?.Name;
+                        sheet.Cells[currentIndex + 1, 5].Value = xCode?.MatchStrength;
+                        excelPackage.SaveAs(path);
+                    }
+                    catch { }
+
+                      currentIndex++;
+                    continue;
+                }
+
+                string value = @$"Checking item code: {xCode?.OriginalCode?.Code} - {xCode?.OriginalCode?.Name}";
+                Console.WriteLine(value);
+
+
+                var ans = Console.ReadLine();
+                ans = ans?.ToUpper();
+
+                if (ans?.StartsWith("Q") ?? false) return;
+                if (ans?.StartsWith("P") ?? false)
+                {
+                    if (currentIndex == 0)
+                        throw new Exception("Can't move back because that is the first record already");
+                    else
+                        currentIndex--;
+                    continue;
+                }
+                if (ans?.StartsWith("N") ?? false)
+                {
+                    if (nyahururuItemCodes.Count >= currentIndex)
+                        throw new Exception("Can't move forward because that is the last record already");
+                    else
+                        currentIndex++;
+                    continue;
+                }
+
+                var matchedCodes = Matcher.MatchCodes(xCode?.OriginalCode, allItemsCodes, 20);
+
+                int xCount = 1;
+                var body = new StringBuilder();
+                matchedCodes
+                    .OrderBy(n => n.Measure)
+                    .Take(15).ToList().ForEach(word =>
+                    {
+                        try
+                        {
+                            var line = $"{xCount++}. {word.Code.Code} - {word.Code.Name}";
+                            body.AppendLine(line);
+                        }
+                        catch { }
+                    });
+
+                body.AppendLine($@"
+Select an item code from the list e.g 1, 2 or 3 or enter a valid item code. ({currentIndex} / {nyahururuItemCodes.Count})
+");
+                
+                Console.WriteLine(body.ToString());
+                var newItemCode = Console.ReadLine();
+                var newItemName = xCode.OriginalCode.Name;
+                short match = -1;
+                if (int.TryParse(newItemCode, out int mxs) && mxs < 100)
+                {
+                    newItemCode = matchedCodes[mxs - 1].Code?.Code;
+                    newItemName = matchedCodes[mxs - 1].Code?.Name;
+                    match=matchedCodes[mxs - 1].Measure;
+                }
+                else
+                {
+                    var objFound = allItemsCodes.FirstOrDefault(x => x.Code == newItemCode);
+                    if (objFound != null)
+                    {
+                        newItemCode = objFound?.Code;
+                        newItemName = objFound?.Name;
+                        match = 1000;
+                    }
+                }              
+
+                for (int i = 0; i < 10; i++)
+                {
+                    if (CustomValidations.IsValidItemCode(newItemCode ?? ""))
+                    {
+                        try
+                        {
+                            sheet.Cells[currentIndex + 1, 1].Value = xCode?.OriginalCode?.Code;
+                            sheet.Cells[currentIndex + 1, 2].Value = xCode?.OriginalCode?.Name;
+                            sheet.Cells[currentIndex + 1, 3].Value = newItemCode;
+                            sheet.Cells[currentIndex + 1, 4].Value = newItemName;
+                            sheet.Cells[currentIndex + 1, 5].Value = match;
+                          
+                            excelPackage.SaveAs(path);
+                        }
+                        catch { }
+                         currentIndex++;
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Please re-enter the item code.");
+                        newItemCode = Console.ReadLine();
+                    }
+                }
+                //excelPackage.Save(path);
+            }
+            catch (Exception ex)
+            {
+                Console.BackgroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine(ex);
+                Console.BackgroundColor = ConsoleColor.Black;
+            }
+        } while (true);
+         excelPackage.Save(path);
     }
 }

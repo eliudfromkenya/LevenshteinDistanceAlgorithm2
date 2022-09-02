@@ -199,20 +199,32 @@ try
    2. Search Free Item Code Backward.
    3. Search item by name.
    4. Process Excel.
+   5. Update Item Code. 
    Q. Quit.
 ";
 		Console.WriteLine(value);
 
-        var key = Console.ReadKey();
+		//var objs = from cell in nyahururuDifference.Cells["C:C"]// a:a is the column a
+		//		   where cell?.Value?.ToString()?.Equals(x)  // x is the input userid
+		//		   select sheet.Cells[cell.Start.Row, 2]; // 2 is column b, Email Address
+		var objs = (from cell in nyahururuDifference.Cells["C:C"]
+					where CustomValidations
+					      .IsValidItemCode(cell?.Value?.ToString() ?? "")
+					select new { Data = cell.Value.ToString(), cell.Start.Row }
+					)?.OrderBy(c => c.Row)?.Select(v => v.Data)?.ToList();
+
+		var key = Console.ReadKey();
 		if (key.Key == ConsoleKey.D1)
 			ItemChecker.SearchItemForward(allItemsCodes);
 		else if (key.Key == ConsoleKey.D2)
 			ItemChecker.SearchItemBackward(allItemsCodes);
-        else if (key.Key == ConsoleKey.D3)
-            ItemChecker.SearchItemByName(allItemsCodes);
-        else if (key.Key == ConsoleKey.D4)
+		else if (key.Key == ConsoleKey.D3)
+			ItemChecker.SearchItemByName(allItemsCodes);
+		else if (key.Key == ConsoleKey.D4)
 			GenerateBranchExcels();
-        else if (key.Key == ConsoleKey.Q)
+		else if (key.Key == ConsoleKey.D5)
+			ItemChecker.UpdateItemByName(allItemsCodes, nyahururuItemCodes, objs ?? new List<string>(), mainFolder);
+		else if (key.Key == ConsoleKey.Q)
 			Environment.Exit(0);
     } while (true);	
 }

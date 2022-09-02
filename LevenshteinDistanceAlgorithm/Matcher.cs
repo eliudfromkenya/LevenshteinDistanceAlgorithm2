@@ -262,28 +262,34 @@ namespace LevenshteinDistanceAlgorithm
             List<ItemCodeMatch> itemCodeMatches = new();
             nyahururuItemCodes.ForEach(tt =>
             {
-                ItemCodeMatch match = new()
+                var newCode = MatchCodes(tt, allItemsCodes, 1)?.FirstOrDefault();
+                itemCodeMatches.Add(new ItemCodeMatch
                 {
-                    OriginalCode = tt
-                };
-                itemCodeMatches.Add(match);
-
-                var obj = allItemsCodes.FirstOrDefault(m => m.HarmonizedName == tt.HarmonizedName);
-
-                if(obj !=null)
-                {
-                    match.MatchedCode=obj;
-                    match.MatchStrength = 0;
-                    return;
-                }
-
-                obj = allItemsCodes.MinBy(v => LaveteshinDistanceAlgorithm(v, tt));
-                match.MatchedCode = obj;
-                match.MatchStrength = (short)LaveteshinDistanceAlgorithm(obj, tt);
-                if (obj.MeasureUnit != tt.MeasureUnit)
-                    match.MatchStrength += 3;
+                    OriginalCode = tt,
+                    MatchedCode = newCode?.Code,
+                    MatchStrength = (short)newCode?.Measure
+                });
             });
             return itemCodeMatches;
+        }
+
+        public static List<(ItemCode Code, short Measure)> MatchCodes(ItemCode tt, List<ItemCode> allItemsCodes, int matchCount = 1)
+        {
+             var obj = allItemsCodes.FirstOrDefault(m => m.HarmonizedName == tt.HarmonizedName);
+
+            if (obj != null)
+                 return new() { (obj, 0) };
+
+            return allItemsCodes
+                .Select(m =>
+                {
+                    var mn = LaveteshinDistanceAlgorithm(m, tt);
+                    if (m.MeasureUnit != tt.MeasureUnit)
+                        mn += 3;
+                    return new { Obj = m, Measure = mn };
+                }).OrderBy(v => v.Measure)
+                .Take(matchCount)
+                .Select(m => (m.Obj, m.Measure)).ToList();
         }
     }
 }
