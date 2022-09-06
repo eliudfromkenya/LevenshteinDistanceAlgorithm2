@@ -6,7 +6,7 @@ using System.Linq;
 	ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 	string mainFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Excel Working Files");
 
-	using var allStocksMaliplusFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "item list kfa with stocks copy.xlsx")));
+	using var allStocksMaliplusFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "item_master - Copy.xlsx")));
 	using var nyahururuDifferenceFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "item difference Nyahururu Branch.xlsx")));
 	using var oldItemCodesFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "matching rows.xlsx")));
 	using var unClarifiedItemCodesFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "not matching.xlsx")));
@@ -49,18 +49,18 @@ using System.Linq;
 				allStocksMaliplus.Cells[i, 1].Value?.ToString()?.Trim() ?? "";
 
 			decimal qty = 0;
-			try
-			{
-				if (decimal.TryParse(allStocksMaliplus.Cells[i, 4].Value?.ToString() ?? "", out decimal num))
-					qty = num;
-			}
-			catch { }
-			try
-			{
-				if (qty == 0 && decimal.TryParse(allStocksMaliplus.Cells[i, 3].Value?.ToString() ?? "", out decimal num))
-					qty = num;
-			}
-			catch { }
+			//try
+			//{
+			//	if (decimal.TryParse(allStocksMaliplus.Cells[i, 4].Value?.ToString() ?? "", out decimal num))
+			//		qty = num;
+			//}
+			//catch { }
+			//try
+			//{
+			//	if (qty == 0 && decimal.TryParse(allStocksMaliplus.Cells[i, 3].Value?.ToString() ?? "", out decimal num))
+			//		qty = num;
+			//}
+			//catch { }
 
 			if (CustomValidations.IsValidItemCode(itemCode))
 			{
@@ -71,8 +71,8 @@ using System.Linq;
 					{
 						Quantity = qty,
 						Code = allStocksMaliplus.Cells[i, 1].Value?.ToString()?.Trim(),
-						Name = allStocksMaliplus.Cells[i, 2].Value?.ToString()?.Trim().Replace("  ", " "),
-						Distributor = allStocksMaliplus.Cells[i, 3].Value?.ToString()?.Trim(),
+						Name = allStocksMaliplus.Cells[i, 3].Value?.ToString()?.Trim().Replace("  ", " "),
+						Distributor = allStocksMaliplus.Cells[i, 13].Value?.ToString()?.Trim(),
 						IsVerified = true
 					});
 				}
@@ -89,8 +89,6 @@ using System.Linq;
 			Console.BackgroundColor = ConsoleColor.Black;
 		}
 	}
-
-	// using var objs = package.Workbook.Worksheets[0];
 
 	for (int i = unClarifiedItemCodes.Dimension.Start.Row; i < unClarifiedItemCodes.Dimension.End.Row; i++)
 	{
@@ -190,6 +188,38 @@ void GenerateBranchExcels()
 }
 
 
+void GenerateFinalExcel()
+{
+	try
+	{
+		var excelPackage = allStocksMaliplusFile;
+		excelPackage.Workbook.Properties.Author = "KFA / Primesoft Implimentation Team";
+		excelPackage.Workbook.Properties.Title = "Zanas to Maliplus Item Master Matching Report";
+		excelPackage.Workbook.Properties.Subject = "Automated Data Matching";
+		excelPackage.Workbook.Properties.Created = DateTime.Now;
+		excelPackage.Workbook.Properties.Company = "KFA LTD";
+
+		var branch = "Finalized Item Master";
+		var title = $"{branch} Item Codes Match Information";
+
+		var service = new MsExcelReportService();
+		//service.GenerateMatchReport(excelPackage, data, mainFolder, branch);
+		//service.GenerateGroupsCodeReport(excelPackage, allItemsCodes, mainFolder, branch);
+		service.GenerateDulplicatedItemCodes2Report(excelPackage, allItemsCodes, mainFolder, branch);
+		//service.GenerateDulplicatedItemCodesOnlyReport(excelPackage, allItemsCodes, mainFolder, branch);
+
+		Console.WriteLine("Done");
+	}
+	catch (Exception ex)
+	{
+		Console.BackgroundColor = ConsoleColor.DarkRed;
+		Console.WriteLine(ex);
+		Console.BackgroundColor = ConsoleColor.Black;
+	}
+	//Console.WriteLine("Done");
+}
+
+
 try
 {
 	do
@@ -200,6 +230,7 @@ try
    3. Search item by name.
    4. Process Excel.
    5. Update Item Code. 
+   6. Generate Final Master.
    Q. Quit.
 ";
 		Console.WriteLine(value);
@@ -224,6 +255,8 @@ try
 			GenerateBranchExcels();
 		else if (key.Key == ConsoleKey.D5)
 			ItemChecker.UpdateItemByName(allItemsCodes, nyahururuItemCodes, objs ?? new List<string>(), mainFolder);
+		else if (key.Key == ConsoleKey.D6)
+			GenerateFinalExcel();
 		else if (key.Key == ConsoleKey.Q)
 			Environment.Exit(0);
     } while (true);	

@@ -166,6 +166,95 @@ public class MsExcelReportService
     }
 
 
+    public string GenerateDulplicatedItemCodes2Report(ExcelPackage excelPackage, List<ItemCode> items, string mainFolder, string branch)
+    {
+        currentRow = 3;
+        var matchCodes = $"Duplicated Item Codes";
+        var sheet = excelPackage.Workbook.Worksheets.Add(matchCodes);
+
+        sheet.Cells["A1:G1"].Merge = true;
+        sheet.Cells["A1"].Value = matchCodes;
+        sheet.Row(1).Height = 20;
+        sheet.Row(1).Style.Font.Size = 20;
+        sheet.Row(1).Style.Font.Color.SetColor(Color.Purple);
+        sheet.Row(1).Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+        sheet.Row(1).Style.Font.Bold = true;
+
+        sheet.Row(currentRow).Height = 20;
+        sheet.Row(currentRow).Style.Font.Size = 12;
+        sheet.Row(currentRow).Style.Font.Color.SetColor(Color.DarkGray);
+        sheet.Row(currentRow).Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+        sheet.Row(currentRow).Style.Font.Bold = true;
+
+        var range = sheet.Cells[currentRow, 1, currentRow, 5];
+        range.Style.Font.Color.SetColor(Color.RebeccaPurple);
+        range.Style.Font.UnderLine = true;
+        range.Style.Font.Size = 14;
+        range.Merge = true;
+        range.Value = matchCodes;
+        currentRow++;
+
+        sheet.Cells[currentRow, 1].Value = "Item Code";
+        sheet.Cells[currentRow, 2].Value = "Description";
+        sheet.Cells[currentRow, 3].Value = "Quantity";
+        sheet.Cells[currentRow, 4].Value = "Unit Of Sale";
+        sheet.Cells[currentRow, 5].Value = "Is Duplicate";
+
+        sheet.Cells[currentRow, 4, currentRow, 5].Style.Font.Color.SetColor(Color.RebeccaPurple);
+        sheet.Cells[currentRow, 1, currentRow, 5].Style.Font.UnderLine = true;
+        currentRow++;
+
+        items
+            .GroupBy(v => v.HarmonizedName)
+            .Where(x => x.Count() > 1)
+            .OrderByDescending(c => c?.Count())
+            .ToList().ForEach(grp =>
+            {
+                List<string> doneCols = new();
+
+
+
+
+                foreach (var col in grp
+                   .OrderByDescending(c => c.Quantity)
+                   .ThenBy(x => x.MeasureUnit)
+                   .ThenBy(x => x.Name))
+                {
+                    var isDuplicate = doneCols.Contains((col?.HarmonizedName ?? ""));
+                    doneCols.Add((col?.HarmonizedName ?? ""));
+
+                    if (!col?.IsVerified ?? false)
+                        sheet.Cells[currentRow, 1, currentRow, 5].Style.Fill.SetBackground(Color.Lavender);
+                    sheet.Cells[currentRow, 1].Value = col?.Code;
+                    sheet.Cells[currentRow, 2].Value = col?.Name;
+                    sheet.Cells[currentRow, 3].Value = col?.Quantity;
+                    sheet.Cells[currentRow, 4].Value = col?.MeasureUnit;
+                    sheet.Cells[currentRow, 5].Value = isDuplicate ? "Yes" : "No";
+
+                    try
+                    {
+                        var chkBox = sheet.Drawings.AddCheckBoxControl(col?.Code);
+                        chkBox.SetPosition(7, currentRow, 1, 1);
+                        chkBox.LinkedCell = new ExcelAddress("$G$1");
+                    }
+                    catch { }
+
+
+                    if (isDuplicate)
+                    {
+                        range = sheet.Cells[currentRow, 1, currentRow, 5];
+                        range.Style.Font.Color.SetColor(Color.DarkRed);
+                    }
+                    currentRow++;
+                }
+                currentRow += 1;
+            });
+
+        var file = Path.Combine(mainFolder, $"{branch}.xlsx");
+        excelPackage.SaveAs(new FileInfo(file));
+        return file;
+    }
+
     public string GenerateDulplicatedItemCodesReport(ExcelPackage excelPackage, List<ItemCode> items, string mainFolder, string branch)
     {
         currentRow = 3;

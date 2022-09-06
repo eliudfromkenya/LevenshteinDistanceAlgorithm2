@@ -31,6 +31,7 @@ namespace LevenshteinDistanceAlgorithm
                         var value = Regex.Match(col.Name ?? "", pattern).Value;
                         col.Name = $"{value[1..^1]} {col.Name?.Replace(value, "")}";
                     }
+                    col.Name = col?.Name?.Replace(")", "").Replace("(", "");
                 }
                 catch (Exception ex) { Console.WriteLine("Error 2A " + ex.ToString()); }
                 col.Name = col.Name?.ToUpper();
