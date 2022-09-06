@@ -72,7 +72,7 @@ using System.Linq;
 						Quantity = qty,
 						Code = allStocksMaliplus.Cells[i, 1].Value?.ToString()?.Trim(),
 						Name = allStocksMaliplus.Cells[i, 3].Value?.ToString()?.Trim().Replace("  ", " "),
-						Distributor = allStocksMaliplus.Cells[i, 13].Value?.ToString()?.Trim(),
+						//Distributor = allStocksMaliplus.Cells[i, 13].Value?.ToString()?.Trim(),
 						IsVerified = true
 					});
 				}
@@ -204,7 +204,7 @@ void GenerateFinalExcel()
 
 		var service = new MsExcelReportService();
 		//service.GenerateMatchReport(excelPackage, data, mainFolder, branch);
-		//service.GenerateGroupsCodeReport(excelPackage, allItemsCodes, mainFolder, branch);
+		service.GenerateGroupsCodeReport(excelPackage, allItemsCodes, mainFolder, branch);
 		service.GenerateDulplicatedItemCodes2Report(excelPackage, allItemsCodes, mainFolder, branch);
 		//service.GenerateDulplicatedItemCodesOnlyReport(excelPackage, allItemsCodes, mainFolder, branch);
 
