@@ -54,6 +54,11 @@ public class MsExcelReportService
         sheet.Cells[currentRow, 6].Value = "Match Strength";
         sheet.Cells[currentRow, 7].Value = "Already Verified";
 
+        sheet.Cells[currentRow, 8].Value = "IUOM";
+        sheet.Cells[currentRow, 9].Value = "Buying_Price";
+        sheet.Cells[currentRow, 10].Value = "Sale_Price";
+        sheet.Cells[currentRow, 11].Value = "Closing";
+
         sheet.Cells[currentRow, 4, currentRow, 7].Style.Font.Color.SetColor(Color.RebeccaPurple);
         sheet.Cells[currentRow, 1, currentRow, 7].Style.Font.UnderLine = true;
         currentRow++;
@@ -74,6 +79,21 @@ public class MsExcelReportService
                 sheet.Cells[currentRow, 6].Value = col?.MatchStrength;
                 sheet.Cells[currentRow, 7].Value = (col?.MatchedCode.IsVerified ?? false) ? "Yes" : "No";
                 sheet.Cells[currentRow, 4].Style.Font.Bold = true;
+
+                if (!string.IsNullOrWhiteSpace(col?.OriginalCode?.Narration))
+                {
+                    var decimals = col.OriginalCode
+                    .Narration.Split(",")
+                    .Select(m => decimal.TryParse(m, out decimal mnx) ? mnx : 0).ToArray();
+                    if(decimals.Length > 3)
+                    {
+                        sheet.Cells[currentRow, 8].Value = col.OriginalCode
+                    .Narration.Split(",").FirstOrDefault();
+                        sheet.Cells[currentRow, 9].Value = decimals[1];
+                        sheet.Cells[currentRow, 10].Value = decimals[2];
+                        sheet.Cells[currentRow, 11].Value = decimals[3];
+                    }
+                }
             }
             range = sheet.Cells[currentRow, 4, currentRow, 6];
             range.Style.Font.Color.SetColor(Color.DarkRed);

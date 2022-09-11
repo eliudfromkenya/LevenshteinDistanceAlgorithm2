@@ -72,12 +72,40 @@ namespace LevenshteinDistanceAlgorithm
                         {"ML",new []{"MILLITER","MLT"} },
                         {"L", new[]{"LITER", "LT","LTR"} }
                     };
+
+                    var companyReplaces = new Dictionary<string, string[]>
+                    {
+                        { "JOJEMI",new[]{"JOJ"} },
+                        {"SIMLAW", new[]{ "SIM" } },
+                        {"ULTRAVETIS",new []{"ULTRA","ULT"} },
+                        {"GRIFFATON", new[]{"GRI", "GRIFF","GRIF", } },
+                        {"HYGRO",new []{"HYGROTECH","HGRO"} },
+                        {"L", new[]{"LITER", "LT","LTR"} }
+                    };
                     //fert, cabb, D/ , S/Loaf, EGG P/BLACK BEAUTY,EGG PLANT B/B , EGG PLANT BEAUTY,L/MASH,L/STOCK,M/SALVE,M SALVE,H/PROS,H/PHOS,H/PHO, L/STOCK,D/LICK,S/LICK,HI PHOS,R/CREOLE,S/D LICK,M/MAKER,S  D/LICK,S/D LICK,S/LICK,D/MEAL,SUGARLOAF,D/LICK, D.LICK, D/LICK,M/MAKER,M. MAKER,TOMATOE,HIGHPHOS,H/PHOSPOROUS,HI-PHOS,S/BABY,H/PHOSPHOROUS,
                     //start with "
                     //replace name double space
                     // LTD. from distributor before matching
                     foreach (var item in replaces)
                     {
+
+
+                        try
+                        {
+                            col.Name = String.Join(" ", col?.Name?.Split(' ').Select(x =>
+                             {
+                                 foreach (var item in companyReplaces)
+                                     foreach (var obj in item.Value)
+                                         if (obj == x?.ToUpper())
+                                             return item.Key;
+                                 return x;
+                             }) ?? Array.Empty<string>());
+                        }
+                        catch (Exception)
+                        {
+
+                            throw;
+                        }
                         var objs = item.Value.SelectMany(n => new[] { n, $"{n}S" }).ToList();
                         var pattern = $"[a-zA-Z]+";
                         if (Regex.Match(col.MeasureUnit ?? "", pattern).Success)
@@ -122,12 +150,33 @@ namespace LevenshteinDistanceAlgorithm
 
             if (name.Contains("S/LICK") && !name.Contains("SUPER LICK"))
                 name = name.Replace("S/LICK", "SUPER LICK");
+            if (name.Contains(" HIGH PHOS ") && !name.Contains("HIGH PHOSPHOROUS"))
+                name = name.Replace("HIGH PHOS", "HIGH PHOSPHOROUS");
+            if (name.Contains(" H/P ") && !name.Contains("HIGH PHOSPHOROUS"))
+                name = name.Replace("H/P", "HIGH PHOSPHOROUS");
+            if (name.Contains(" H-PHOS ") && !name.Contains("HIGH PHOSPHOROUS"))
+                name = name.Replace("S/D LICK", "SUPER DAIRY LICK");
             if (name.Contains("S/D LICK") && !name.Contains("SUPER DAIRY LICK"))
                 name = name.Replace("S/D LICK", "SUPER DAIRY LICK");
             if (name.Contains("S  D/LICK") && !name.Contains("SUPER DAIRY LICK"))
                 name = name.Replace("S  D/LICK", "SUPER DAIRY LICK");
             if (name.Contains("S/D LICK") && !name.Contains("SUPER DAIRY LICK"))
                 name = name.Replace("S/D LICK", "SUPER DAIRY LICK");
+            if (name.Contains("FORDHOOK") && !name.Contains("FORD HOOK"))
+                name = name.Replace("FORDHOOK", "FORD HOOK");
+            if (name.Contains("NIGHTSHADE") && !name.Contains("NIGHT SHADE"))
+                name = name.Replace("NIGHTSHADE", "NIGHT SHADE");
+            if (name.Contains("SUGARBABY") && !name.Contains("SUGARBABY"))
+                name = name.Replace("SUGARBABY", "SUGAR BABY");
+            if (name.Contains("SPINACH F/HOOK") && !name.Contains("SPINACH FORD HOOK"))
+                name = name.Replace("SPINACH F/H ", "SPINACH FORD HOOK ");
+            if (name.Contains("SPINACH F/H ") && !name.Contains("SPINACH FORD HOOK "))
+                name = name.Replace("SPINACH F GIANT", "SPINACH FORD HOOK");
+            if (name.Contains("SPINACH F GIANT") && !name.Contains("SPINACH FORD HOOK GIANT"))
+                name = name.Replace("SPINACH F/HOOK", "SPINACH FORD HOOK GIANT");
+
+            if (name.Contains("CALIFORNIA W ") && !name.Contains("CALIFORNIA WONDER "))
+                name = name.Replace("CALIFORNIA W ", "CALIFORNIA WONDER ");
 
             return name.Replace("  ", " ").Replace("LTD.","").Replace("LTD","");
         }
@@ -212,12 +261,17 @@ namespace LevenshteinDistanceAlgorithm
             if (name.Contains("DARKRED") && !name.Contains("DARK RED"))
                 name = name.Replace("DARKRED", "DARK RED");
 
-            if (name.Contains("DUODIP") && !name.Contains("DARKRED"))
+            if (name.Contains("DUODIP") && !name.Contains("DUO DIP"))
                 name = name.Replace("DUODIP", "DUO DIP");
 
+            if (name.Contains("VETRO ") && !name.Contains("VETPRO "))
+                name = name.Replace("VETRO ", "VETRO ");
 
             if (name.Contains("D.LICK") && !name.Contains("DAIRY LICK"))
                 name = name.Replace("D.LICK", "DAIRY LICK");
+
+            if (name.Contains("FERTILIZERILITY"))
+                name = name.Replace("FERTILIZERILITY", "FERTILITY");
 
             name = name.Replace("PHOSPHOROUSS", "PHOSPHOROUS");
             return name.Replace("  ", " ").Replace("LTD.","").Replace("LTD","");

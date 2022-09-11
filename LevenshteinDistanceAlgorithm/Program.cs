@@ -6,40 +6,45 @@ using System.Linq;
 	ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 	string mainFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Excel Working Files");
 
-	using var allStocksMaliplusFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "item_master - Copy.xlsx")));
-	using var nyahururuDifferenceFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "item difference Nyahururu Branch.xlsx")));
+	using var allStocksMaliplusFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "item_master.xlsx")));
+	//using var nyahururuDifferenceFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "item difference Nyahururu Branch.xlsx")));
+    using var nyahururuDifferenceFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "NYAHURURU ITEMS SORT.xlsx")));
 	using var oldItemCodesFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "matching rows.xlsx")));
 	using var unClarifiedItemCodesFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "not matching.xlsx")));
 
 	using var allStocksMaliplus = allStocksMaliplusFile.Workbook.Worksheets[0];
-	using var nyahururuDifference = nyahururuDifferenceFile.Workbook.Worksheets[0];
+	using var nyahururuDifference = nyahururuDifferenceFile.Workbook.Worksheets["Sheet2"];
 	using var oldItemCodes = oldItemCodesFile.Workbook.Worksheets[0];
 	using var unClarifiedItemCodes = unClarifiedItemCodesFile.Workbook.Worksheets[0];
 
 	List<ItemCode> allItemsCodes = new(), /*unCleanItemCodes = new(), */nyahururuItemCodes = new();
-	for (int i = oldItemCodes.Dimension.Start.Row; i < oldItemCodes.Dimension.End.Row; i++)
+for (int i = oldItemCodes.Dimension.Start.Row; i < oldItemCodes.Dimension.End.Row; i++)
+{
+	try
 	{
-		try
+		var itemCode = oldItemCodes.Cells[i, 1].Value?.ToString()?.Trim() ?? "";
+
+		if (allItemsCodes.Any(n => n.Code == itemCode))
+			continue;
+
+		if (CustomValidations.IsValidItemCode(itemCode))
 		{
-			if (CustomValidations.IsValidItemCode(oldItemCodes.Cells[i, 1].Value?.ToString()?.Trim() ?? ""))
+			allItemsCodes.Add(new()
 			{
-				allItemsCodes.Add(new()
-				{
-					Code = oldItemCodes.Cells[i, 1].Value?.ToString()?.Trim(),
-					Name = oldItemCodes.Cells[i, 2].Value?.ToString(),
-					Distributor = oldItemCodes.Cells[i, 3].Value?.ToString(),
-					IsVerified = true
-				});
-			}
-		}
-		catch (Exception ex)
-		{
-			Console.BackgroundColor = ConsoleColor.DarkRed;
-			Console.WriteLine(ex);
-			Console.BackgroundColor = ConsoleColor.Black;
+				Code = itemCode,
+				Name = oldItemCodes.Cells[i, 2].Value?.ToString(),
+				Distributor = oldItemCodes.Cells[i, 3].Value?.ToString(),
+				IsVerified = true
+			});
 		}
 	}
-
+	catch (Exception ex)
+	{
+		Console.BackgroundColor = ConsoleColor.DarkRed;
+		Console.WriteLine(ex);
+		Console.BackgroundColor = ConsoleColor.Black;
+	}
+}
 
 	for (int i = allStocksMaliplus.Dimension.Start.Row; i < allStocksMaliplus.Dimension.End.Row; i++)
 	{
@@ -123,31 +128,63 @@ using System.Linq;
 	}
 
 
-	for (int i = nyahururuDifference.Dimension.Start.Row; i < nyahururuDifference.Dimension.End.Row; i++)
+//for (int i = nyahururuDifference.Dimension.Start.Row; i < nyahururuDifference.Dimension.End.Row; i++)
+//{
+//	try
+//	{
+//		if (CustomValidations.IsValidItemCode(nyahururuDifference.Cells[i, 3].Value?.ToString()?.Trim() ?? ""))
+//		{
+//			nyahururuItemCodes.Add(new()
+//			{
+//				Code = nyahururuDifference.Cells[i, 3].Value?.ToString()?.Trim(),
+//				Name = nyahururuDifference.Cells[i, 4].Value?.ToString()?.Trim().Replace("  ", " "),
+//				Quantity = decimal.TryParse(nyahururuDifference.Cells[i, 5].Value?.ToString()?.Trim(), out decimal mx) ? mx : 0,
+//				IsVerified = false
+//			});
+//		}
+//	}
+//	catch (Exception ex)
+//	{
+//		Console.BackgroundColor = ConsoleColor.DarkRed;
+//		Console.WriteLine(ex);
+//		Console.BackgroundColor = ConsoleColor.Black;
+//	}
+//}
+
+
+for (int i = nyahururuDifference.Dimension.Start.Row; i < nyahururuDifference.Dimension.End.Row; i++)
+{
+	try
 	{
-		try
+		var cells = nyahururuDifference.Cells;
+		var itemCode = cells[i, 1].Value?.ToString()?.Trim() ?? "";
+		if (int.TryParse(itemCode, out int itmNumber))
+			itemCode = itmNumber.ToString("000000");
+
+		if (CustomValidations.IsValidItemCode(itemCode))
 		{
-			if (CustomValidations.IsValidItemCode(nyahururuDifference.Cells[i, 3].Value?.ToString()?.Trim() ?? ""))
+			
+			nyahururuItemCodes.Add(new()
 			{
-				nyahururuItemCodes.Add(new()
-				{
-					Code = nyahururuDifference.Cells[i, 3].Value?.ToString()?.Trim(),
-					Name = nyahururuDifference.Cells[i, 4].Value?.ToString()?.Trim().Replace("  ", " "),
-					Quantity = decimal.TryParse(nyahururuDifference.Cells[i, 5].Value?.ToString()?.Trim(), out decimal mx) ? mx : 0,
-					IsVerified = false
-				});
-			}
-		}
-		catch (Exception ex)
-		{
-			Console.BackgroundColor = ConsoleColor.DarkRed;
-			Console.WriteLine(ex);
-			Console.BackgroundColor = ConsoleColor.Black;
+				Code = itemCode, 
+				Narration = String.Join(",", Enumerable.Range(3,4).Select(v => cells[i, v].Value?.ToString()?.Trim())),
+				Name = cells[i, 2].Value?.ToString()?.Trim()
+				.Replace("  ", " "),
+				Quantity = decimal.TryParse(cells[i, 6].Value?.ToString()?.Trim(), out decimal mx) ? mx : 0,
+				IsVerified = false
+			});
 		}
 	}
+	catch (Exception ex)
+	{
+		Console.BackgroundColor = ConsoleColor.DarkRed;
+		Console.WriteLine(ex);
+		Console.BackgroundColor = ConsoleColor.Black;
+	}
+}
 
 
-    Matcher.CheckCodes(ref allItemsCodes);
+Matcher.CheckCodes(ref allItemsCodes);
     //Matcher.CheckCodes(ref unCleanItemCodes);
     Matcher.CheckCodes(ref nyahururuItemCodes);
 
