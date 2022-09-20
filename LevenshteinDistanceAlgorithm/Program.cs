@@ -1,4 +1,5 @@
 ﻿using LevenshteinDistanceAlgorithm;
+using Newtonsoft.Json;
 using OfficeOpenXml;
 using System.Linq;
 
@@ -18,6 +19,10 @@ using System.Linq;
 	using var unClarifiedItemCodes = unClarifiedItemCodesFile.Workbook.Worksheets[0];
 
 	List<ItemCode> allItemsCodes = new(), /*unCleanItemCodes = new(), */nyahururuItemCodes = new();
+
+
+//var groupData = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonData.Groups);
+
 for (int i = oldItemCodes.Dimension.Start.Row; i < oldItemCodes.Dimension.End.Row; i++)
 {
 	try
@@ -193,6 +198,62 @@ Matcher.CheckCodes(ref allItemsCodes);
         .ThenBy(v => v.OriginalCode?.Code)
         .ToList();
 
+void RefreshCodes()
+{
+
+	using var con = new ConnectionObject().MaliplusConnection;
+	con.Open();
+	using var cmd = con.CreateCommand();
+	cmd.CommandText = "SELECT ITEM_CODE, ITEM_NAME, BUY_PRICE, SALE_PRICE FROM ITEM_MASTER";
+
+	using var reader = cmd.ExecuteReader();
+	while (reader.Read())
+	{
+		try
+		{
+			var itemCode = reader.GetString(0);
+			if (CustomValidations.IsValidItemCode(itemCode))
+			{
+				var item = allItemsCodes.FirstOrDefault(x => x.Code == itemCode);
+				_ = decimal.TryParse(reader.GetString(2), out decimal res);
+				var qty = res;
+				if (item == null)
+				{
+					allItemsCodes.Add(new()
+					{
+						Quantity = qty,
+						Code = itemCode,
+						Name = reader.GetString(1),
+						IsVerified = true
+					});
+				}
+				else
+				{
+					item.Quantity = qty;
+					item.Name = reader.GetString(1);
+					item.IsVerified = true;
+				}
+			}
+			var grops = JsonData.Groups;
+			foreach (var item in allItemsCodes)
+			{
+				try
+				{
+					item.ItemGroup = grops.FirstOrDefault(c => c.id == item?.Code?[..2]).name;
+				}
+				catch { }
+			}
+            Console.WriteLine("Done");
+		}
+		catch (Exception ex)
+		{
+			Console.BackgroundColor = ConsoleColor.DarkRed;
+			Console.WriteLine(ex);
+			Console.BackgroundColor = ConsoleColor.Black;
+		}
+	}
+}
+
 void GenerateBranchExcels()
 {
 	try
@@ -256,7 +317,7 @@ void GenerateFinalExcel()
 	//Console.WriteLine("Done");
 }
 
-
+//RefreshCodes();
 try
 {
 	do
@@ -268,6 +329,7 @@ try
    4. Process Excel.
    5. Update Item Code. 
    6. Generate Final Master.
+   7. Refresh Item Codes.
    Q. Quit.
 ";
 		Console.WriteLine(value);
@@ -294,6 +356,8 @@ try
 			ItemChecker.UpdateItemByName(allItemsCodes, nyahururuItemCodes, objs ?? new List<string>(), mainFolder);
 		else if (key.Key == ConsoleKey.D6)
 			GenerateFinalExcel();
+		else if (key.Key == ConsoleKey.D7)
+			RefreshCodes();
 		else if (key.Key == ConsoleKey.Q)
 			Environment.Exit(0);
     } while (true);	

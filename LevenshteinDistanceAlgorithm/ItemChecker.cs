@@ -93,7 +93,7 @@ internal class ItemChecker
                     {
                         try
                         {
-                            var line = $"{xCount++}. {word.Code} - {word.Name}";
+                            var line = $"{xCount++}. {word.Code} - {word.Name} => ({word.ItemGroup})";
                             body.AppendLine(line);
                         }
                         catch { }

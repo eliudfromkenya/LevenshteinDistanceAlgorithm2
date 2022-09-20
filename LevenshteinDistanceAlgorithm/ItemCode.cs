@@ -3,6 +3,7 @@ public class ItemCode
 {
     public string? Code { get; set; }
     public string? Name { get; set; }
+    public string? ItemGroup { get; set; }
     public string? HarmonizedName { get; set; }
     public string? Narration { get; set; }
     public string? HarmonizedGroupName { get; set; }
