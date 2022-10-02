@@ -245,6 +245,26 @@ Select an item code from the list e.g 1, 2 or 3 or enter a valid item code. ({cu
                 Console.BackgroundColor = ConsoleColor.Black;
             }
         } while (true);
-         excelPackage.Save(path);
+        try
+        {
+            var objs = from cell in sheet.Cells["A:A"]
+                       where !allItemsCodes.Any(m => m.Code == cell?.Value?.ToString())
+                       select cell.Start.Row;
+
+            if (objs.Any())
+            {
+                foreach (var row in objs)
+                {
+                    var cell = sheet.Cells[$"B{row}"];
+                    cell.Style.Fill.SetBackground(System.Drawing.Color.DarkOrange);
+                }
+            }
+        }
+        catch (Exception)
+        {
+        }
+
+
+        excelPackage.Save(path);
     }
 }

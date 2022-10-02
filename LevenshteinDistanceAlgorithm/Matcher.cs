@@ -1,15 +1,9 @@
 ﻿// using MoreLinq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
 
 namespace LevenshteinDistanceAlgorithm
 {
-    static class Matcher
+    internal static class Matcher
     {
         public static void CheckCodes(ref List<ItemCode> codes)
         {
@@ -18,8 +12,14 @@ namespace LevenshteinDistanceAlgorithm
                 try
                 {
                     if (!string.IsNullOrWhiteSpace(col.Distributor)
-                    && !int.TryParse(col.Distributor??"",out int _))
+                    && !int.TryParse(col.Distributor ?? "", out int _))
                         col.Name = $"{col.Distributor} {col.Name}";
+                }
+                catch (Exception ex) { Console.WriteLine("Error 1 " + ex.ToString()); }
+				
+				try
+                {
+					col.Name = col.Name?.Replace("x", " ")?.Replace("X", " ");
                 }
                 catch (Exception ex) { Console.WriteLine("Error 1 " + ex.ToString()); }
 
@@ -31,7 +31,31 @@ namespace LevenshteinDistanceAlgorithm
                         var value = Regex.Match(col.Name ?? "", pattern).Value;
                         col.Name = $"{value[1..^1]} {col.Name?.Replace(value, "")}";
                     }
-                    col.Name = col?.Name?.Replace(")", "").Replace("(", "");
+                    col.Name = col?.Name?.Replace(")", " ").Replace("(", " ");
+                }
+                catch (Exception ex) { Console.WriteLine("Error 2A " + ex.ToString()); }
+
+                try
+                {
+                    var pattern = @"\{.*[A-Z]+.*\}";
+                    if (Regex.Match(col.Name ?? "", pattern).Success)
+                    {
+                        var value = Regex.Match(col.Name ?? "", pattern).Value;
+                        col.Name = $"{value[1..^1]} {col.Name?.Replace(value, "")}";
+                    }
+                    col.Name = col?.Name?.Replace("}", " ").Replace("{", " ");
+                }
+                catch (Exception ex) { Console.WriteLine("Error 2A " + ex.ToString()); }
+
+                try
+                {
+                    var pattern = @"\[.*[A-Z]+.*\]";
+                    if (Regex.Match(col.Name ?? "", pattern).Success)
+                    {
+                        var value = Regex.Match(col.Name ?? "", pattern).Value;
+                        col.Name = $"{value[1..^1]} {col.Name?.Replace(value, "")}";
+                    }
+                    col.Name = col?.Name?.Replace("]", " ").Replace("[", " ");
                 }
                 catch (Exception ex) { Console.WriteLine("Error 2A " + ex.ToString()); }
                 col.Name = col.Name?.ToUpper();
@@ -55,12 +79,12 @@ namespace LevenshteinDistanceAlgorithm
                     const string pattern = @"([\d]+\.?[\d]* *[a-zA-Z]{1,5} *$)|([\d]* *x *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]* *\* *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]+ *[a-zA-Z]{1,5} *x *[\d]* *$)|([\d]+ *[a-zA-Z]{1,5} *\* *[\d]* *$)";
 
                     if (Regex.Match(col.Name ?? "", pattern).Success)
-                        col.MeasureUnit = Regex.Match(col.Name ?? "", pattern).Value?.Replace("  "," ")?.Trim();
+                        col.MeasureUnit = Regex.Match(col.Name ?? "", pattern).Value?.Replace("  ", " ")?.Trim();
                     col.GroupName = col.Name?.Trim();
                     if (col.MeasureUnit?.Length > 1)
                         col.GroupName = col.Name?.Replace(col.MeasureUnit ?? "", "")?.Trim();
                 }
-                catch (Exception ex){ Console.WriteLine("Error 3 " + ex.ToString()); }
+                catch (Exception ex) { Console.WriteLine("Error 3 " + ex.ToString()); }
                 try
                 {
                     var replaces = new Dictionary<string, string[]>
@@ -88,8 +112,6 @@ namespace LevenshteinDistanceAlgorithm
                     // LTD. from distributor before matching
                     foreach (var item in replaces)
                     {
-
-
                         try
                         {
                             col.Name = String.Join(" ", col?.Name?.Split(' ').Select(x =>
@@ -103,7 +125,6 @@ namespace LevenshteinDistanceAlgorithm
                         }
                         catch (Exception)
                         {
-
                             throw;
                         }
                         var objs = item.Value.SelectMany(n => new[] { n, $"{n}S" }).ToList();
@@ -124,7 +145,7 @@ namespace LevenshteinDistanceAlgorithm
                 {
                     col.HarmonizedName = $@"{string.Join(" ", Regex.Matches(col.GroupName ?? "", "[0-9a-zA-Z]+")
                    .Select(v => v.Value?.ToUpper()?.Trim())
-                   .Distinct().OrderBy(c => c))} {col.MeasureUnit?.Trim()}".Replace(" ","");
+                   .Distinct().OrderBy(c => c))} {col.MeasureUnit?.Trim()}".Replace(" ", "");
                 }
                 catch (Exception ex) { Console.WriteLine("Error 5 " + ex.ToString()); }
                 try
@@ -139,7 +160,8 @@ namespace LevenshteinDistanceAlgorithm
                 {
                     col.HarmonizedGroupName = CheckHarmonizedName(col.HarmonizedGroupName);
                     col.HarmonizedName = CheckHarmonizedName(col.HarmonizedName);
-                } catch (Exception ex) { Console.WriteLine("Error 5 " + ex.ToString()); }
+                }
+                catch (Exception ex) { Console.WriteLine("Error 5 " + ex.ToString()); }
             });
         }
 
@@ -178,9 +200,10 @@ namespace LevenshteinDistanceAlgorithm
             if (name.Contains("CALIFORNIA W ") && !name.Contains("CALIFORNIA WONDER "))
                 name = name.Replace("CALIFORNIA W ", "CALIFORNIA WONDER ");
 
-            return name.Replace("  ", " ").Replace("LTD.","").Replace("LTD","");
+            return name.Replace("  ", " ").Replace("LTD.", "").Replace("LTD", "");
         }
-           private static string? CheckName(string? name)
+
+        private static string? CheckName(string? name)
         {
             if (string.IsNullOrWhiteSpace(name))
                 return name;
@@ -274,7 +297,7 @@ namespace LevenshteinDistanceAlgorithm
                 name = name.Replace("FERTILIZERILITY", "FERTILITY");
 
             name = name.Replace("PHOSPHOROUSS", "PHOSPHOROUS");
-            return name.Replace("  ", " ").Replace("LTD.","").Replace("LTD","");
+            return name.Replace("  ", " ").Replace("LTD.", "").Replace("LTD", "");
         }
 
         public static short LaveteshinDistanceAlgorithm(ItemCode code, ItemCode code2)
@@ -287,6 +310,7 @@ namespace LevenshteinDistanceAlgorithm
                 level += 5;
             return level;
         }
+
         public static short LaveteshinDistanceAlgorithmBody(string s, string t)
         {
             s = s.ToUpper();
@@ -330,10 +354,10 @@ namespace LevenshteinDistanceAlgorithm
 
         public static List<(ItemCode Code, short Measure)> MatchCodes(ItemCode tt, List<ItemCode> allItemsCodes, int matchCount = 1)
         {
-             var obj = allItemsCodes.FirstOrDefault(m => m.HarmonizedName == tt.HarmonizedName);
+            var obj = allItemsCodes.FirstOrDefault(m => m.HarmonizedName == tt.HarmonizedName);
 
             if (obj != null)
-                 return new() { (obj, 0) };
+                return new() { (obj, 0) };
 
             return allItemsCodes
                 .Select(m =>

@@ -9,12 +9,14 @@ using System.Linq;
 
 	using var allStocksMaliplusFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "item_master.xlsx")));
 	//using var nyahururuDifferenceFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "item difference Nyahururu Branch.xlsx")));
-    using var nyahururuDifferenceFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "NYAHURURU ITEMS SORT.xlsx")));
+    //using var nyahururuDifferenceFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "NYAHURURU ITEMS SORT.xlsx")));
+    //using var nyahururuDifferenceFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "Sotik KFA LTD.xls")));
+    using var nyahururuDifferenceFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "Sotik KFA LTD 2.xlsx")));
 	using var oldItemCodesFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "matching rows.xlsx")));
 	using var unClarifiedItemCodesFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "not matching.xlsx")));
 
 	using var allStocksMaliplus = allStocksMaliplusFile.Workbook.Worksheets[0];
-	using var nyahururuDifference = nyahururuDifferenceFile.Workbook.Worksheets["Sheet2"];
+	using var nyahururuDifference = nyahururuDifferenceFile.Workbook.Worksheets["Sheet1"];
 	using var oldItemCodes = oldItemCodesFile.Workbook.Worksheets[0];
 	using var unClarifiedItemCodes = unClarifiedItemCodesFile.Workbook.Worksheets[0];
 
@@ -175,7 +177,7 @@ for (int i = nyahururuDifference.Dimension.Start.Row; i < nyahururuDifference.Di
 				Narration = String.Join(",", Enumerable.Range(3,4).Select(v => cells[i, v].Value?.ToString()?.Trim())),
 				Name = cells[i, 2].Value?.ToString()?.Trim()
 				.Replace("  ", " "),
-				Quantity = decimal.TryParse(cells[i, 6].Value?.ToString()?.Trim(), out decimal mx) ? mx : 0,
+				Quantity = decimal.TryParse(cells[i, 4].Value?.ToString()?.Trim(), out decimal mx) ? mx : 0,
 				IsVerified = false
 			});
 		}
@@ -337,11 +339,28 @@ try
 		//var objs = from cell in nyahururuDifference.Cells["C:C"]// a:a is the column a
 		//		   where cell?.Value?.ToString()?.Equals(x)  // x is the input userid
 		//		   select sheet.Cells[cell.Start.Row, 2]; // 2 is column b, Email Address
-		var objs = (from cell in nyahururuDifference.Cells["C:C"]
-					where CustomValidations
-					      .IsValidItemCode(cell?.Value?.ToString() ?? "")
-					select new { Data = cell.Value.ToString(), cell.Start.Row }
-					)?.OrderBy(c => c.Row)?.Select(v => v.Data)?.ToList();
+
+		List<string> CheckUnExistingCodes(){
+			try
+			{
+				return (from cell in nyahururuDifference?.Cells["A:A"]
+							select new
+							{
+								Data = cell.Value.ToString(),
+								ItemCode = (int.TryParse(cell.Value?.ToString() ?? "0", out int mm) ? mm : 0).ToString("000000"),
+								cell.Start.Row
+							}
+									)?.OrderBy(c => c.Row)
+									?.Where(x => CustomValidations.IsValidItemCode(x.ItemCode))
+									?.Select(c => c.ItemCode)
+									?.ToList();
+
+			}
+			catch (Exception)
+			{
+				return new();
+			}
+		}
 
 		var key = Console.ReadKey();
 		if (key.Key == ConsoleKey.D1)
@@ -353,7 +372,7 @@ try
 		else if (key.Key == ConsoleKey.D4)
 			GenerateBranchExcels();
 		else if (key.Key == ConsoleKey.D5)
-			ItemChecker.UpdateItemByName(allItemsCodes, nyahururuItemCodes, objs ?? new List<string>(), mainFolder);
+			ItemChecker.UpdateItemByName(allItemsCodes, nyahururuItemCodes, CheckUnExistingCodes(), mainFolder);
 		else if (key.Key == ConsoleKey.D6)
 			GenerateFinalExcel();
 		else if (key.Key == ConsoleKey.D7)
